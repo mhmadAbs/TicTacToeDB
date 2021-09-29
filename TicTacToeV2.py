@@ -19,6 +19,8 @@ root.configure(bg="grey")
 root.geometry("420x500+500+200")
 
 
+
+
 class NewPlayer:
 
     def __init__(self, window):
@@ -39,7 +41,6 @@ class NewPlayer:
 
         player_sign = StringVar()
         player_sign.set("X")
-        print(player_sign.get())
         sign_menu = OptionMenu(window, player_sign, "X", "O")
         sign_menu.place(x=170, y=110)
 
@@ -133,20 +134,21 @@ class NewPlayer:
                     s33.set(player_sign.get())
                     squares_strings.remove(s33)
                 if checkResult():
-                    feedback_lbl.config(text="{} won the game !".format(username_entry.get()))
+                    showFeedback("You won the game !", "green")
                     nonlocal player_wins
                     player_wins += 1
                     player_score_lbl.config(text=str(getPlayerScore()))
                 if not checkResult() and len(squares_strings) == 0:
-                    feedback_lbl.config(text="Tide !")
+                    showFeedback("Tide !", "blue")
                 if len(squares_strings) > 0 and not checkResult():
-                    feedback_lbl.config(text="AI's Turn", fg="blue")
+                    showFeedback("AI's Turn", "blue")
                     feedback_lbl.after(500, playAi)  # Some delay as if AI is thinking
 
         def u_nameExists(username):
             cursor = db.cursor()
             cursor.execute("SELECT * FROM results WHERE username='{}'".format(username))
             res_set = cursor.fetchall()  # returns a list contains all results(as tuples)
+            print(res_set)
             return len(res_set) > 0
 
         # To check the Validity of name given by the player
@@ -154,25 +156,21 @@ class NewPlayer:
             u_name = username_entry.get()
             if len(u_name) > 0:
                 if u_nameExists(u_name):
-                    feedback_lbl.config(text="Given name is token")
+                    showFeedback("Given name is token!", "Red")
                     return False
                 else:
                     return True
-            else:
-                feedback_lbl.config(text="Enter your Name first !")
-                return False
+            showFeedback("Enter a username first !", "Red")
+            return False
 
         def submit():
             if checkUNameValid():
                 username_entry.config(state="disabled")
                 sign_menu.config(state="disabled")
-                feedback_lbl.config(text="Game Started", fg="green")
+                showFeedback("Game Started", "Green")
                 submit_btn.config(state="disabled")
                 player_score_lbl.config(text=int(getPlayerScore()))
                 ai_score_lbl.config(text=int(getAiScore()))
-
-            else:
-                feedback_lbl.config(text="Enter your Name first !")
 
         header = Label(window, anchor="center", bg="grey", fg="orange", height=2, text="Welcome to TicTacToe",
                        font="none 15 bold")
@@ -245,11 +243,6 @@ class NewPlayer:
         feedback_lbl = Label(window, text="Enter ID to and submit to start", fg="brown", bg="grey", font="none 13 ")
         feedback_lbl.place(x=40, y=170)
 
-        def getPlayerScore():
-            return player_wins
-
-        def getAiScore():
-            return ai_wins
 
         player_score_lbl = Label(window, text=player_wins, fg="black", bg="white", font="Arial 35 bold")
         player_score_lbl.place(x=80, y=210)
@@ -259,6 +252,16 @@ class NewPlayer:
 
         ai_score_lbl = Label(window, text=ai_wins, fg="black", bg="white", font="Arial 35 bold")
         ai_score_lbl.place(x=270, y=210)
+
+
+        def showFeedback(msg, color):
+            feedback_lbl.config(text=str(msg), fg=str(color) , font=f"none 12  bold")
+
+        def getPlayerScore():
+            return player_wins
+
+        def getAiScore():
+            return ai_wins
 
         '''
             To prevent player from selecting a position that is full
@@ -275,10 +278,10 @@ class NewPlayer:
             if len(squares_strings) > 0 and not checkResult():  # There is at least one free place
                 choice = random.choice(squares_strings)
                 choice.set(getAiSign())
-                feedback_lbl.config(text="{}'s Turn".format(username_entry.get()), fg="blue")
+                showFeedback("Your Turn", "blue")
                 squares_strings.remove(choice)
                 if checkResult():
-                    feedback_lbl.config(text="You lost !")
+                    showFeedback("You lost !", "Red")
                     nonlocal ai_wins
                     ai_wins += 1
                     ai_score_lbl.config(text=str(ai_wins))
@@ -315,7 +318,8 @@ class NewPlayer:
                 sqr.set("")
             for btn in btns:
                 btn.config(state="active", bg="white")
-            feedback_lbl.config(text="Game Restarted")
+
+            showFeedback("Game Restarted", "Yellow")
 
         restart_button = Button(window, text="Restart", width=15, fg="green", font="none 12 bold", command=restart)
         restart_button.place(x=200, y=450, height=30)
@@ -349,12 +353,20 @@ class RegisteredPlayer:
         player_wins = 0
         ai_wins = 0
 
-        def getPlayerScore():
+        def getScores():
             cursor = db.cursor()
             sql_stmt = f"SELECT p_score, ai_score FROM results WHERE username='{uname_entry.get()}'"
             cursor.execute(sql_stmt)
             result = cursor.fetchone()
             return result[0], result[1]
+
+        def playerNotRegistered(u_name):
+            cursor = db.cursor()
+            sql_stmt = f"SELECT p_score FROM results WHERE username='{u_name}'"
+            cursor.execute(sql_stmt)
+            if cursor.rowcount != 0:
+                return False
+            return True
 
         def getAiSign():
             if player_sign.get() == "X":
@@ -438,27 +450,27 @@ class RegisteredPlayer:
                     feedback_lbl.config(text="{} won the game !".format(uname_entry.get()))
                     player_wins += 1
                     player_score_lbl.config(text=player_wins)
-                    updateDB()
                 if not checkResult() and len(squares_strings) == 0:
                     feedback_lbl.config(text="Tide !")
                     player_wins += 1
                     ai_wins += 1
-                    updateDB()
                 if len(squares_strings) > 0 and not checkResult():
                     feedback_lbl.config(text="AI's Turn", fg="blue")
                     feedback_lbl.after(500, playAi)  # Some delay as if AI is thinking
 
         def submit():
-            p_id = uname_entry.get()
-            if len(p_id) > 0:
-                uname_entry.config(state="disabled")
-                sign_menu.config(state="disabled")
-                feedback_lbl.config(text="Game Started", fg="green")
-                submit_btn.config(state="disabled")
-                updateResult()
-                player_score_lbl.config(text=int(player_wins))
-                ai_score_lbl.config(text=int(ai_wins))
-
+            u_name = uname_entry.get()
+            if len(u_name) > 0:
+                if playerNotRegistered(u_name):
+                    uname_entry.config(state="disabled")
+                    sign_menu.config(state="disabled")
+                    feedback_lbl.config(text="Game Started", fg="green")
+                    submit_btn.config(state="disabled")
+                    updateResult()
+                    player_score_lbl.config(text=int(player_wins))
+                    ai_score_lbl.config(text=int(ai_wins))
+                else:
+                    feedback_lbl.config(text=f"There is no account registered with username {u_name}")
             else:
                 feedback_lbl.config(text="Enter you Name first !")
 
@@ -560,26 +572,28 @@ class RegisteredPlayer:
                     nonlocal ai_wins
                     ai_wins += 1
                     ai_score_lbl.config(text=str(ai_wins))
-                    updateDB()  # CHANGE TO ENUMS
 
             for btn in btns:  # To prevent player from selecting a position that is full
                 if btn["text"] != "":
                     btn.config(state="disabled")
 
+
         def updateDB():
             username = uname_entry.get()
-            new_score_a = ai_score_lbl["text"]
-            new_score_p = player_score_lbl["text"]
-            cursor = db.cursor()
-            sql_stmt = f"UPDATE results SET p_score={new_score_p}, ai_score={new_score_a} WHERE username='{username}'"
-            cursor.execute(sql_stmt)
-            db.commit()
+            if username != "": # So no empty fields get inserted in DB
+                new_score_a = ai_score_lbl["text"]
+                new_score_p = player_score_lbl["text"]
+                cursor = db.cursor()
+                sql_stmt = f"UPDATE results SET p_score={new_score_p}, ai_score={new_score_a} WHERE username='{username}'"
+                cursor.execute(sql_stmt)
+                db.commit()
 
-        def updateResult():
+        def updateResult(): # set the results from old matches.
             nonlocal player_wins, ai_wins
-            player_wins, ai_wins = getPlayerScore()
+            player_wins, ai_wins = getScores()
 
         def exit_f():
+            updateDB()
             sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
@@ -609,7 +623,7 @@ def startReg():
     top = Toplevel()  # so that it appears on the top.
     top.title("TicTacToe")
     top.configure(bg="grey")
-    top.geometry("420x500+500+200")
+    top.geometry("420x600+500+200")
     NewPlayer(top)
 
 
@@ -617,7 +631,7 @@ def startLogin():
     top = Toplevel()  # so that it appears on the top.
     top.title("TicTacToe")
     top.configure(bg="grey")
-    top.geometry("420x500+500+200")
+    top.geometry("420x600+500+200")
     RegisteredPlayer(top)
 
 
