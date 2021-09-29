@@ -1,11 +1,7 @@
 import random
 from tkinter import *
 import mysql.connector
-
-root = Tk()
-root.title("TicTacToe")
-root.configure(bg="grey")
-root.wm_minsize(420, 500)
+import sys
 
 '''
     build a Connection to xo_db Database..
@@ -16,6 +12,11 @@ db = mysql.connector.connect(
     database="xo_db",
     passwd="mkmk"
 )
+
+root = Tk()
+root.title("TicTacToe")
+root.configure(bg="grey")
+root.geometry("420x500+500+200")
 
 
 class NewPlayer:
@@ -35,6 +36,12 @@ class NewPlayer:
         player_wins = 0
         ai_wins = 0
         window.title("TicTacToe(Register)")
+
+        player_sign = StringVar()
+        player_sign.set("X")
+        print(player_sign.get())
+        sign_menu = OptionMenu(window, player_sign, "X", "O")
+        sign_menu.place(x=170, y=110)
 
         def getAiSign():
             if player_sign.get() == "X":
@@ -167,11 +174,6 @@ class NewPlayer:
             else:
                 feedback_lbl.config(text="Enter your Name first !")
 
-        player_sign = StringVar()
-        player_sign.set("X")
-        sign_menu = OptionMenu(window, player_sign, "X", "O")
-        sign_menu.place(x=170, y=110)
-
         header = Label(window, anchor="center", bg="grey", fg="orange", height=2, text="Welcome to TicTacToe",
                        font="none 15 bold")
         header.grid(row=0, column=0)
@@ -179,7 +181,7 @@ class NewPlayer:
         empty_row = Label(window, text="", bg="grey")
         empty_row.grid(row=1, column=0)
 
-        id_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Player ID : ",
+        id_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Username : ",
                        font="none 12 ")
         id_lbl.place(x=15, y=70)
 
@@ -283,11 +285,10 @@ class NewPlayer:
 
                 disable_btns()
 
-
-
         '''
             To update database with the match result (After game was closed)
         '''
+
         def updateResult(username):
             cursor = db.cursor()
             cursor.execute(
@@ -296,15 +297,15 @@ class NewPlayer:
 
         def exit_f():
             updateResult(username_entry.get())
-            root.destroy()
+            sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
         exit_btn.place(x=40, y=450, height=30)
 
-
         '''
             To Restart the whole game
         '''
+
         def restart():
             btns = [r1c1, r1c2, r1c3, r2c1, r2c2, r2c3, r3c1, r3c2, r3c3]
 
@@ -322,6 +323,7 @@ class NewPlayer:
         '''
             To stop the game at the End of a round (When there is a winner or tide)
         '''
+
         def stopGame():
             btns = [r1c1, r1c2, r1c3, r2c1, r2c2, r2c3, r3c1, r3c2, r3c3]
             for btn in btns:
@@ -472,9 +474,9 @@ class RegisteredPlayer:
         empty_row = Label(window, text="", bg="grey")
         empty_row.grid(row=1, column=0)
 
-        id_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Player ID : ",
-                       font="none 12 ")
-        id_lbl.place(x=15, y=70)
+        uname_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Player ID : ",
+                          font="none 12 ")
+        uname_lbl.place(x=15, y=70)
 
         uname_entry = Entry(window, bg="white", width=20)
         uname_entry.place(x=170, y=70)
@@ -578,7 +580,7 @@ class RegisteredPlayer:
             player_wins, ai_wins = getPlayerScore()
 
         def exit_f():
-            root.destroy()
+            sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
         exit_btn.place(x=40, y=450, height=30)
@@ -603,12 +605,26 @@ class RegisteredPlayer:
                 btn.config(state="disabled")
 
 
-u_choice = input("Choose r for Register and l for Login : ")
+def startReg():
+    top = Toplevel()  # so that it appears on the top.
+    top.title("TicTacToe")
+    top.configure(bg="grey")
+    top.geometry("420x500+500+200")
+    NewPlayer(top)
 
-if u_choice == "r":
-    NewPlayer(root)
-    root.mainloop()
-elif u_choice == "l":
-    RegisteredPlayer(root)
-    root.mainloop()
 
+def startLogin():
+    top = Toplevel()  # so that it appears on the top.
+    top.title("TicTacToe")
+    top.configure(bg="grey")
+    top.geometry("420x500+500+200")
+    RegisteredPlayer(top)
+
+
+reg_btn = Button(root, text="Register", command=startReg, width=30, height=5, fg="Green", font="none 15 bold",
+                 relief="solid").pack(pady=10)
+login_btn = Button(root, text="Login", command=startLogin, width=30, height=5, fg="Green", font="none 15 bold",
+                   relief="solid").pack(pady=10)
+ext_btn = Button(root, text="Exit", command=sys.exit, width=30, height=5, fg="Red", font="none 15 bold",
+                 relief="solid").pack(pady=10)
+mainloop()
