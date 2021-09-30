@@ -15,9 +15,9 @@ db = mysql.connector.connect(
 
 root = Tk()
 root.title("TicTacToe")
+root.resizable(False, False)
 root.configure(bg="grey")
-root.geometry("420x500+500+200")
-
+root.geometry("390x500+500+200")
 
 
 
@@ -42,26 +42,26 @@ class NewPlayer:
         player_sign = StringVar()
         player_sign.set("X")
         sign_menu = OptionMenu(window, player_sign, "X", "O")
-        sign_menu.place(x=170, y=110)
+        sign_menu.place(x=170, y=130)
 
         def getAiSign():
             if player_sign.get() == "X":
                 return "O"
             return "X"
 
+
         '''
             Used to highlight the positions that caused the win
         '''
-
         def highlight(fst, snd, thd):
             fst.config(bg="orange")
             snd.config(bg="orange")
             thd.config(bg="orange")
 
-        '''
-            checks if a win condition was fulfilled.
-        '''
 
+        '''
+            checks if a win/lost condition was fulfilled.
+        '''
         def checkResult():
             if s11.get() == s12.get() and s12.get() == s13.get() and s11.get() != "":
                 stopGame()
@@ -98,10 +98,22 @@ class NewPlayer:
                 highlight(r1c3, r2c2, r3c1)
                 return True
 
+
+        '''
+            To prevent DB Size Errors
+        '''
+        def validDBReq():
+            u_name = uname_entry.get()
+            passwd = pass_entry.get()
+            if len(u_name) > 50 or len(passwd) > 50:  # To prevent a DB Error
+                showFeedback("Username or Password should be maximum 50 character long", "red")
+                return False
+            return True
+
+
         '''
             Defines what happens when a Player clicks on a position.
         '''
-
         def onSquare(num, btn):
             if sign_menu["state"] == "disabled" and len(squares_strings) > 0:
                 btn.config(state="disabled")
@@ -152,116 +164,147 @@ class NewPlayer:
             return len(res_set) > 0
 
         # To check the Validity of name given by the player
-        def checkUNameValid():
-            u_name = username_entry.get()
-            if len(u_name) > 0:
-                if u_nameExists(u_name):
-                    showFeedback("Given name is token!", "Red")
+        def checkInputValid():
+            u_name = uname_entry.get()
+            passwd = pass_entry.get()
+            if validDBReq():
+                if len(u_name) > 0 and len(passwd) > 0: # To guarantee that user enters a password
+                    if u_nameExists(u_name):
+                        showFeedback("Given name is token!", "red")
+                        return False
+                    else:
+                        return True
+                else :
+                    showFeedback("Enter your username and password first !", "red")
                     return False
-                else:
-                    return True
-            showFeedback("Enter a username first !", "Red")
-            return False
+
+
 
         def submit():
-            if checkUNameValid():
-                username_entry.config(state="disabled")
+            if checkInputValid():
+                uname_entry.config(state="disabled")
                 sign_menu.config(state="disabled")
                 showFeedback("Game Started", "Green")
                 submit_btn.config(state="disabled")
                 player_score_lbl.config(text=int(getPlayerScore()))
                 ai_score_lbl.config(text=int(getAiScore()))
 
+        player_sign = StringVar()
+        player_sign.set("X")
+        sign_menu = OptionMenu(window, player_sign, "X", "O")
+        sign_menu.place(x=170, y=135)
+
         header = Label(window, anchor="center", bg="grey", fg="orange", height=2, text="Welcome to TicTacToe",
                        font="none 15 bold")
-        header.grid(row=0, column=0)
+        header.grid(row=0, column=1)
 
         empty_row = Label(window, text="", bg="grey")
         empty_row.grid(row=1, column=0)
 
-        id_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Username : ",
-                       font="none 12 ")
-        id_lbl.place(x=15, y=70)
+        uname_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Username : ",
+                          font="none 12 ")
+        uname_lbl.place(x=15, y=70)
 
-        username_entry = Entry(window, bg="white", width=20)
-        username_entry.place(x=170, y=70)
+        uname_entry = Entry(window, bg="white", width=20)
+        uname_entry.place(x=170, y=70)
+
+        pass_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Password : ",
+                         font="none 12 ")
+        pass_lbl.place(x=15, y=100)
+
+        pass_entry = Entry(window, bg="white", width=20)
+        pass_entry.place(x=170, y=100)
 
         submit_btn = Button(window, text="Submit", width=6, fg="orange", bg="grey", font="none 12 bold",
                             command=submit)
-        submit_btn.place(x=310, y=110)
+        submit_btn.place(x=310, y=135)
 
         empty_row2 = Label(window, text="", bg="grey")
         empty_row2.grid(row=3, column=0)
 
         sign_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Sign : ", font="none 12 ")
-        sign_lbl.place(x=15, y=110)
+        sign_lbl.place(x=15, y=135)
 
         Label(window, text="--------------------------------------------------------------------------------------",
               fg="black",
-              bg="grey").place(x=0, y=150)
+              bg="grey").place(x=0, y=170)
+
+        r1_y = 350
 
         r1c1 = Button(window, textvariable=s11, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(11, r1c1))
         r1c1.place(
-            height=50, x=40, y=290)
+            height=50, x=40, y=r1_y)
         r1c2 = Button(window, textvariable=s12, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(12, r1c2))
         r1c2.place(
             height=50,
             x=145,
-            y=290)
+            y=r1_y)
         r1c3 = Button(window, textvariable=s13, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(13, r1c3))
         r1c3.place(
             height=50,
             x=250,
-            y=290)
+            y=r1_y)
+
+        r2_y = 400
         r2c1 = Button(window, textvariable=s21, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(21, r2c1))
-        r2c1.place(height=50, x=40, y=340)
+        r2c1.place(height=50, x=40, y=r2_y)
 
         r2c2 = Button(window, textvariable=s22, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(22, r2c2))
-        r2c2.place(height=50, x=145, y=340)
+        r2c2.place(height=50, x=145, y=r2_y)
 
         r2c3 = Button(window, textvariable=s23, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(23, r2c3))
-        r2c3.place(height=50, x=250, y=340)
+        r2c3.place(height=50, x=250, y=r2_y)
+
+        r3_y = 450
 
         r3c1 = Button(window, textvariable=s31, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(31, r3c1))
-        r3c1.place(height=50, x=40, y=390)
+        r3c1.place(height=50, x=40, y=r3_y)
 
         r3c2 = Button(window, textvariable=s32, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(32, r3c2))
-        r3c2.place(height=50, x=145, y=390)
+        r3c2.place(height=50, x=145, y=r3_y)
 
         r3c3 = Button(window, textvariable=s33, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(33, r3c3))
-        r3c3.place(height=50, x=250, y=390)
+        r3c3.place(height=50, x=250, y=r3_y)
 
-        feedback_lbl = Label(window, text="Enter ID to and submit to start", fg="brown", bg="grey", font="none 13 ")
-        feedback_lbl.place(x=40, y=170)
+        feedback_lbl = Label(window, text="Enter Username & Password to and submit to start", fg="brown", bg="grey", font="none 13 bold")
+        feedback_lbl.place(x=5, y=190)
 
+        you_lbl = Label(window, text="You", fg="black", bg="grey", font="Arial 25 bold")
+        you_lbl.place(x=65, y=220)
+        ai_lbl = Label(window, text="AI", fg="black", bg="grey", font="Arial 25 bold")
+        ai_lbl.place(x=265, y=220)
 
-        player_score_lbl = Label(window, text=player_wins, fg="black", bg="white", font="Arial 35 bold")
-        player_score_lbl.place(x=80, y=210)
+        scores_y = 275
+        player_score_lbl = Label(window, text="0", fg="black", bg="white", font="Arial 35 bold")
+        player_score_lbl.place(x=80, y=scores_y)
 
         two_points_lbl = Label(window, text=":", fg="black", bg="grey", font="Arial 35 bold")
-        two_points_lbl.place(x=180, y=210)
+        two_points_lbl.place(x=180, y=scores_y)
 
-        ai_score_lbl = Label(window, text=ai_wins, fg="black", bg="white", font="Arial 35 bold")
-        ai_score_lbl.place(x=270, y=210)
-
+        ai_score_lbl = Label(window, text="0", fg="black", bg="white", font="Arial 35 bold")
+        ai_score_lbl.place(x=270, y=scores_y)
 
         def showFeedback(msg, color):
-            feedback_lbl.config(text=str(msg), fg=str(color) , font=f"none 12  bold")
+            feedback_lbl.config(text=str(msg), fg=str(color), font=f"none 12  bold")
 
         def getPlayerScore():
             return player_wins
 
         def getAiScore():
             return ai_wins
+
+
+
+
 
         '''
             To prevent player from selecting a position that is full
@@ -292,18 +335,21 @@ class NewPlayer:
             To update database with the match result (After game was closed)
         '''
 
-        def updateResult(username):
+        def updateDB(username, password):
+            assert len(username) > 0 and len(username)
             cursor = db.cursor()
             cursor.execute(
-                f"INSERT INTO results(username, p_score, ai_score) VALUES('{username}',{player_wins},{ai_wins})")
+                f"INSERT INTO results(username, password, p_score, ai_score) VALUES('{username}',{password}, {player_wins},{ai_wins})")
             db.commit()
 
         def exit_f():
-            updateResult(username_entry.get())
-            sys.exit()
+            u_name = uname_entry.get()
+            if u_name != "":
+                updateDB(uname_entry.get(), pass_entry.get())
+                sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
-        exit_btn.place(x=40, y=450, height=30)
+        exit_btn.place(x=40, y=520, height=40)
 
         '''
             To Restart the whole game
@@ -322,7 +368,7 @@ class NewPlayer:
             showFeedback("Game Restarted", "Yellow")
 
         restart_button = Button(window, text="Restart", width=15, fg="green", font="none 12 bold", command=restart)
-        restart_button.place(x=200, y=450, height=30)
+        restart_button.place(x=200, y=520, height=40)
 
         '''
             To stop the game at the End of a round (When there is a winner or tide)
@@ -368,6 +414,10 @@ class RegisteredPlayer:
                 return False
             return True
 
+
+        '''
+            Decide AI's Sign
+        '''
         def getAiSign():
             if player_sign.get() == "X":
                 return "O"
@@ -447,117 +497,158 @@ class RegisteredPlayer:
                     s33.set(player_sign.get())
                     squares_strings.remove(s33)
                 if checkResult():
-                    feedback_lbl.config(text="{} won the game !".format(uname_entry.get()))
+                    showFeedback("You won the game !", "green")
                     player_wins += 1
                     player_score_lbl.config(text=player_wins)
                 if not checkResult() and len(squares_strings) == 0:
-                    feedback_lbl.config(text="Tide !")
+                    showFeedback("Tide !", "yellow")
                     player_wins += 1
                     ai_wins += 1
                 if len(squares_strings) > 0 and not checkResult():
-                    feedback_lbl.config(text="AI's Turn", fg="blue")
+                    showFeedback("AI's Turn", "blue")
                     feedback_lbl.after(500, playAi)  # Some delay as if AI is thinking
+
+        def checkPass(u_name, passwd):
+            cursor = db.cursor()
+            sql_stmt = f"SELECT * WHERE username = {u_name} AND password={passwd}"
+            cursor.execute(sql_stmt)
+            res = cursor.fetchall()
+            return len(res) > 0
+
+        def validDBReq():
+            u_name = uname_entry.get()
+            passwd = pass_entry.get()
+            if len(u_name) > 50 or len(passwd) > 50:  # To prevent a DB Error
+                showFeedback("Username or Password should be maximum 50 character long", "red")
+                return False
+            return True
 
         def submit():
             u_name = uname_entry.get()
-            if len(u_name) > 0:
-                if playerNotRegistered(u_name):
-                    uname_entry.config(state="disabled")
-                    sign_menu.config(state="disabled")
-                    feedback_lbl.config(text="Game Started", fg="green")
-                    submit_btn.config(state="disabled")
-                    updateResult()
-                    player_score_lbl.config(text=int(player_wins))
-                    ai_score_lbl.config(text=int(ai_wins))
+            passwd = pass_entry.get()
+            if len(u_name) > 0 and validDBReq():
+                if playerNotRegistered(u_name) :
+                    if checkPass(u_name, passwd):
+                        uname_entry.config(state="disabled")
+                        sign_menu.config(state="disabled")
+                        showFeedback("Game Started", "green")
+                        submit_btn.config(state="disabled")
+                        updateResult()
+                        player_score_lbl.config(text=int(player_wins))
+                        ai_score_lbl.config(text=int(ai_wins))
+                    else:
+                        showFeedback(f"Password is incorrect !", "Red")
                 else:
-                    feedback_lbl.config(text=f"There is no account registered with username {u_name}")
+                    showFeedback(f"There is no account registered with username {u_name}", "red")
             else:
-                feedback_lbl.config(text="Enter you Name first !")
+                showFeedback("Enter you Name first !", "red")
 
         player_sign = StringVar()
         player_sign.set("X")
         sign_menu = OptionMenu(window, player_sign, "X", "O")
-        sign_menu.place(x=170, y=110)
+        sign_menu.place(x=170, y=135)
 
-        header = Label(window, anchor="center", bg="grey", fg="orange", height=2, text="Welcome to TicTacToe",
+        header = Label(window, bg="grey", fg="orange", height=2, text="Welcome to TicTacToe",
                        font="none 15 bold")
-        header.grid(row=0, column=0)
+        header.grid(row=0, column=1)
 
         empty_row = Label(window, text="", bg="grey")
         empty_row.grid(row=1, column=0)
 
-        uname_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Player ID : ",
+        uname_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Username : ",
                           font="none 12 ")
         uname_lbl.place(x=15, y=70)
 
         uname_entry = Entry(window, bg="white", width=20)
         uname_entry.place(x=170, y=70)
 
+        pass_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Password : ",
+                         font="none 12 ")
+        pass_lbl.place(x=15, y=100)
+
+        pass_entry = Entry(window, bg="white", width=20)
+        pass_entry.place(x=170, y=100)
+
         submit_btn = Button(window, text="Submit", width=6, fg="orange", bg="grey", font="none 12 bold",
                             command=submit)
-        submit_btn.place(x=310, y=110)
+        submit_btn.place(x=310, y=135)
 
         empty_row2 = Label(window, text="", bg="grey")
         empty_row2.grid(row=3, column=0)
 
         sign_lbl = Label(window, anchor="w", bg="grey", fg="black", height=1, text="Sign : ", font="none 12 ")
-        sign_lbl.place(x=15, y=110)
+        sign_lbl.place(x=15, y=135)
 
         Label(window, text="--------------------------------------------------------------------------------------",
               fg="black",
-              bg="grey").place(x=0, y=150)
+              bg="grey").place(x=0, y=170)
+
+        r1_y = 350
 
         r1c1 = Button(window, textvariable=s11, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(11, r1c1))
         r1c1.place(
-            height=50, x=40, y=290)
+            height=50, x=40, y=r1_y)
         r1c2 = Button(window, textvariable=s12, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(12, r1c2))
         r1c2.place(
             height=50,
             x=145,
-            y=290)
+            y=r1_y)
         r1c3 = Button(window, textvariable=s13, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(13, r1c3))
         r1c3.place(
             height=50,
             x=250,
-            y=290)
+            y=r1_y)
+
+        r2_y = 400
         r2c1 = Button(window, textvariable=s21, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(21, r2c1))
-        r2c1.place(height=50, x=40, y=340)
+        r2c1.place(height=50, x=40, y=r2_y)
 
         r2c2 = Button(window, textvariable=s22, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(22, r2c2))
-        r2c2.place(height=50, x=145, y=340)
+        r2c2.place(height=50, x=145, y=r2_y)
 
         r2c3 = Button(window, textvariable=s23, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(23, r2c3))
-        r2c3.place(height=50, x=250, y=340)
+        r2c3.place(height=50, x=250, y=r2_y)
+
+        r3_y = 450
 
         r3c1 = Button(window, textvariable=s31, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(31, r3c1))
-        r3c1.place(height=50, x=40, y=390)
+        r3c1.place(height=50, x=40, y=r3_y)
 
         r3c2 = Button(window, textvariable=s32, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(32, r3c2))
-        r3c2.place(height=50, x=145, y=390)
+        r3c2.place(height=50, x=145, y=r3_y)
 
         r3c3 = Button(window, textvariable=s33, bg="white", fg="black", font="none 15 bold", width=8,
                       command=lambda: onSquare(33, r3c3))
-        r3c3.place(height=50, x=250, y=390)
+        r3c3.place(height=50, x=250, y=r3_y)
 
-        feedback_lbl = Label(window, text="Enter ID to and submit to start", fg="brown", bg="grey", font="none 13 ")
-        feedback_lbl.place(x=40, y=170)
+        feedback_lbl = Label(window, text="Enter Username & Password and submit to start", fg="brown", bg="grey", font="none 13 bold")
+        feedback_lbl.place(x=5, y=190)
 
+        you_lbl = Label(window, text="You", fg="black", bg="grey", font="Arial 25 bold")
+        you_lbl.place(x=65, y=220)
+        ai_lbl = Label(window, text="AI", fg="black", bg="grey", font="Arial 25 bold")
+        ai_lbl.place(x=265, y=220)
+
+        scores_y = 275
         player_score_lbl = Label(window, text="0", fg="black", bg="white", font="Arial 35 bold")
-        player_score_lbl.place(x=80, y=210)
+        player_score_lbl.place(x=80, y=scores_y)
 
         two_points_lbl = Label(window, text=":", fg="black", bg="grey", font="Arial 35 bold")
-        two_points_lbl.place(x=180, y=210)
+        two_points_lbl.place(x=180, y=scores_y)
 
         ai_score_lbl = Label(window, text="0", fg="black", bg="white", font="Arial 35 bold")
-        ai_score_lbl.place(x=270, y=210)
+        ai_score_lbl.place(x=270, y=scores_y)
+
+        def showFeedback(msg, color):
+            feedback_lbl.config(text=str(msg), fg=str(color), font=f"none 12  bold")
 
         def playAi():
             btns = [r1c1, r1c2, r1c3, r2c1, r2c2, r2c3, r3c1, r3c2, r3c3]
@@ -565,10 +656,10 @@ class RegisteredPlayer:
             if len(squares_strings) > 0 and not checkResult():  # There is at least one free place
                 choice = random.choice(squares_strings)
                 choice.set(getAiSign())
-                feedback_lbl.config(text="{}'s Turn".format(uname_entry.get()), fg="blue")
+                showFeedback("Your Turn", "blue")
                 squares_strings.remove(choice)
                 if checkResult():
-                    feedback_lbl.config(text="You lost !")
+                    showFeedback("You lost !", "red")
                     nonlocal ai_wins
                     ai_wins += 1
                     ai_score_lbl.config(text=str(ai_wins))
@@ -577,10 +668,9 @@ class RegisteredPlayer:
                 if btn["text"] != "":
                     btn.config(state="disabled")
 
-
         def updateDB():
             username = uname_entry.get()
-            if username != "": # So no empty fields get inserted in DB
+            if username != "":  # So no empty fields get inserted in DB
                 new_score_a = ai_score_lbl["text"]
                 new_score_p = player_score_lbl["text"]
                 cursor = db.cursor()
@@ -588,7 +678,7 @@ class RegisteredPlayer:
                 cursor.execute(sql_stmt)
                 db.commit()
 
-        def updateResult(): # set the results from old matches.
+        def updateResult():  # set the results from old matches.
             nonlocal player_wins, ai_wins
             player_wins, ai_wins = getScores()
 
@@ -597,7 +687,7 @@ class RegisteredPlayer:
             sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
-        exit_btn.place(x=40, y=450, height=30)
+        exit_btn.place(x=40, y=520, height=40)
 
         def restart():
             btns = [r1c1, r1c2, r1c3, r2c1, r2c2, r2c3, r3c1, r3c2, r3c3]
@@ -608,10 +698,10 @@ class RegisteredPlayer:
                 sqr.set("")
             for btn in btns:
                 btn.config(state="active", bg="white")
-            feedback_lbl.config(text="Game Restarted")
+            showFeedback("Game Restarted", "blue")
 
         restart_button = Button(window, text="Restart", width=15, fg="green", font="none 12 bold", command=restart)
-        restart_button.place(x=200, y=450, height=30)
+        restart_button.place(x=200, y=520, height=40)
 
         def stopGame():
             btns = [r1c1, r1c2, r1c3, r2c1, r2c2, r2c3, r3c1, r3c2, r3c3]
@@ -619,26 +709,32 @@ class RegisteredPlayer:
                 btn.config(state="disabled")
 
 
+
+
 def startReg():
     top = Toplevel()  # so that it appears on the top.
+    top.resizable(False, False) # Width, Height
     top.title("TicTacToe")
     top.configure(bg="grey")
-    top.geometry("420x600+500+200")
+    top.geometry("420x570+500+200")
     NewPlayer(top)
 
 
 def startLogin():
     top = Toplevel()  # so that it appears on the top.
+    top.resizable(False, False)
     top.title("TicTacToe")
     top.configure(bg="grey")
-    top.geometry("420x600+500+200")
+    top.geometry("420x570+500+200")
     RegisteredPlayer(top)
 
 
+
+header_lbl = Label(root, text="TicTacToe Special Edition", fg="black", bg="grey", font="none 15 bold").pack(pady=10)
 reg_btn = Button(root, text="Register", command=startReg, width=30, height=5, fg="Green", font="none 15 bold",
-                 relief="solid").pack(pady=10)
-login_btn = Button(root, text="Login", command=startLogin, width=30, height=5, fg="Green", font="none 15 bold",
-                   relief="solid").pack(pady=10)
+                 relief="solid", bg="orange").pack(pady=5)
+login_btn = Button(root, text="Login", command=startLogin, width=30, height=5, fg="Blue", font="none 15 bold",
+                   relief="solid", bg="orange").pack(pady=5)
 ext_btn = Button(root, text="Exit", command=sys.exit, width=30, height=5, fg="Red", font="none 15 bold",
-                 relief="solid").pack(pady=10)
+                 relief="solid", bg="orange").pack(pady=5)
 mainloop()
