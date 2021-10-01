@@ -1,8 +1,10 @@
+import base64
 import random
+import urllib
+from urllib import *
 from tkinter import *
 import mysql.connector
 import sys
-
 '''
     build a Connection to xo_db Database..
 '''
@@ -18,6 +20,7 @@ root.title("TicTacToe")
 root.resizable(False, False)
 root.configure(bg="grey")
 root.geometry("390x500+500+200")
+
 
 
 
@@ -345,11 +348,14 @@ class NewPlayer:
                 f"INSERT INTO results(username, password, p_score, ai_score) VALUES('{username}',{password}, {player_wins},{ai_wins})")
             db.commit()
 
+
+
         def exit_f():
             u_name = uname_entry.get()
             if u_name != "" and not u_nameExists(u_name):
                 updateDB(uname_entry.get(), pass_entry.get())
             sys.exit()
+
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
         exit_btn.place(x=40, y=520, height=40)
@@ -719,14 +725,16 @@ class RegisteredPlayer:
 
 
 
-
 def startReg():
     top = Toplevel()  # so that it appears on the top.
+    top.protocol("WM_DELETE_WINDOW", exitt) # Disable [X] button to guarantee using Exit saving changes
     top.resizable(False, False) # Width, Height
     top.title("TicTacToe")
     top.configure(bg="grey")
     top.geometry("420x570+500+200")
     NewPlayer(top)
+
+
 
 
 def startLogin():
@@ -737,6 +745,8 @@ def startLogin():
     top.geometry("420x570+500+200")
     RegisteredPlayer(top)
 
+def exitt():
+    pass
 
 
 header_lbl = Label(root, text="TicTacToe Special Edition", fg="black", bg="grey", font="none 15 bold").pack(pady=10)
