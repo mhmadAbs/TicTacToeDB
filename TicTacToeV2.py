@@ -105,8 +105,8 @@ class NewPlayer:
         def validDBReq():
             u_name = uname_entry.get()
             passwd = pass_entry.get()
-            if len(u_name) > 50 or len(passwd) > 50:  # To prevent a DB Error
-                showFeedback("Username or Password should be maximum 50 character long", "red")
+            if len(u_name) > 40 or len(passwd) > 40:  # To prevent a DB Error
+                showFeedback("Username or Password should be maximum 50 character long", "pink")
                 return False
             return True
 
@@ -157,10 +157,9 @@ class NewPlayer:
                     feedback_lbl.after(500, playAi)  # Some delay as if AI is thinking
 
         def u_nameExists(username):
-            cursor = db.cursor()
+            cursor = db.cursor(buffered=True)
             cursor.execute("SELECT * FROM results WHERE username='{}'".format(username))
             res_set = cursor.fetchall()  # returns a list contains all results(as tuples)
-            print(res_set)
             return len(res_set) > 0
 
         # To check the Validity of name given by the player
@@ -170,20 +169,24 @@ class NewPlayer:
             if validDBReq():
                 if len(u_name) > 0 and len(passwd) > 0: # To guarantee that user enters a password
                     if u_nameExists(u_name):
-                        showFeedback("Given name is token!", "red")
+                        showFeedback("There is already a user registered with this username!", "pink")
                         return False
                     else:
                         return True
                 else :
-                    showFeedback("Enter your username and password first !", "red")
+                    showFeedback("Enter your username and password first !", "pink")
                     return False
 
-
+        '''
+            starts the game in case of valid user input
+            otherwise feedback will be shown to the user
+        '''
 
         def submit():
             if checkInputValid():
                 uname_entry.config(state="disabled")
                 sign_menu.config(state="disabled")
+                pass_entry.config(state="disabled")
                 showFeedback("Game Started", "Green")
                 submit_btn.config(state="disabled")
                 player_score_lbl.config(text=int(getPlayerScore()))
@@ -294,7 +297,7 @@ class NewPlayer:
         ai_score_lbl.place(x=270, y=scores_y)
 
         def showFeedback(msg, color):
-            feedback_lbl.config(text=str(msg), fg=str(color), font=f"none 12  bold")
+            feedback_lbl.config(text=str(msg), fg=str(color), font="none 12  bold")
 
         def getPlayerScore():
             return player_wins
@@ -324,7 +327,7 @@ class NewPlayer:
                 showFeedback("Your Turn", "blue")
                 squares_strings.remove(choice)
                 if checkResult():
-                    showFeedback("You lost !", "Red")
+                    showFeedback("You lost !", "pink")
                     nonlocal ai_wins
                     ai_wins += 1
                     ai_score_lbl.config(text=str(ai_wins))
@@ -337,16 +340,16 @@ class NewPlayer:
 
         def updateDB(username, password):
             assert len(username) > 0 and len(username)
-            cursor = db.cursor()
+            cursor = db.cursor(buffered=True)
             cursor.execute(
                 f"INSERT INTO results(username, password, p_score, ai_score) VALUES('{username}',{password}, {player_wins},{ai_wins})")
             db.commit()
 
         def exit_f():
             u_name = uname_entry.get()
-            if u_name != "":
+            if u_name != "" and not u_nameExists(u_name):
                 updateDB(uname_entry.get(), pass_entry.get())
-                sys.exit()
+            sys.exit()
 
         exit_btn = Button(window, text="Exit", width=15, fg="red", font="none 12 bold", command=exit_f)
         exit_btn.place(x=40, y=520, height=40)
@@ -399,20 +402,23 @@ class RegisteredPlayer:
         player_wins = 0
         ai_wins = 0
 
+        '''
+            Returns a tuple (player Score , AI Score) from DB.
+        '''
         def getScores():
-            cursor = db.cursor()
+            cursor = db.cursor(buffered=True)
             sql_stmt = f"SELECT p_score, ai_score FROM results WHERE username='{uname_entry.get()}'"
             cursor.execute(sql_stmt)
             result = cursor.fetchone()
             return result[0], result[1]
 
-        def playerNotRegistered(u_name):
-            cursor = db.cursor()
+        def u_nameIsToken(u_name):
+            cursor = db.cursor(buffered=True)
             sql_stmt = f"SELECT p_score FROM results WHERE username='{u_name}'"
             cursor.execute(sql_stmt)
             if cursor.rowcount != 0:
-                return False
-            return True
+                return True
+            return False
 
 
         '''
@@ -509,8 +515,8 @@ class RegisteredPlayer:
                     feedback_lbl.after(500, playAi)  # Some delay as if AI is thinking
 
         def checkPass(u_name, passwd):
-            cursor = db.cursor()
-            sql_stmt = f"SELECT * WHERE username = {u_name} AND password={passwd}"
+            cursor = db.cursor(buffered=True)
+            sql_stmt = f"SELECT * FROM results WHERE username= '{u_name}' AND password={passwd};"
             cursor.execute(sql_stmt)
             res = cursor.fetchall()
             return len(res) > 0
@@ -527,9 +533,10 @@ class RegisteredPlayer:
             u_name = uname_entry.get()
             passwd = pass_entry.get()
             if len(u_name) > 0 and validDBReq():
-                if playerNotRegistered(u_name) :
+                if u_nameIsToken(u_name) :
                     if checkPass(u_name, passwd):
                         uname_entry.config(state="disabled")
+                        pass_entry.config(state="disabled")
                         sign_menu.config(state="disabled")
                         showFeedback("Game Started", "green")
                         submit_btn.config(state="disabled")
@@ -537,11 +544,11 @@ class RegisteredPlayer:
                         player_score_lbl.config(text=int(player_wins))
                         ai_score_lbl.config(text=int(ai_wins))
                     else:
-                        showFeedback(f"Password is incorrect !", "Red")
+                        showFeedback("Password is incorrect !", "Red")
                 else:
-                    showFeedback(f"There is no account registered with username {u_name}", "red")
+                    showFeedback("There is no account registered with given username ", "pink")
             else:
-                showFeedback("Enter you Name first !", "red")
+                showFeedback("Enter you Name first !", "blue")
 
         player_sign = StringVar()
         player_sign.set("X")
@@ -673,7 +680,7 @@ class RegisteredPlayer:
             if username != "":  # So no empty fields get inserted in DB
                 new_score_a = ai_score_lbl["text"]
                 new_score_p = player_score_lbl["text"]
-                cursor = db.cursor()
+                cursor = db.cursor(buffered=True)
                 sql_stmt = f"UPDATE results SET p_score={new_score_p}, ai_score={new_score_a} WHERE username='{username}'"
                 cursor.execute(sql_stmt)
                 db.commit()
@@ -681,6 +688,8 @@ class RegisteredPlayer:
         def updateResult():  # set the results from old matches.
             nonlocal player_wins, ai_wins
             player_wins, ai_wins = getScores()
+            player_score_lbl.config(text=player_wins)
+            ai_score_lbl.config(text=ai_wins)
 
         def exit_f():
             updateDB()
