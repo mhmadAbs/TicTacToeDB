@@ -739,6 +739,7 @@ def startReg():
 
 def startLogin():
     top = Toplevel()  # so that it appears on the top.
+    top.protocol("WM_DELETE_WINDOW", exitt)  # Disable [X] button to guarantee using Exit saving changes
     top.resizable(False, False)
     top.title("TicTacToe")
     top.configure(bg="grey")
