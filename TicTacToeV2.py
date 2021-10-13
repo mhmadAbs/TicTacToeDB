@@ -1,12 +1,11 @@
-import base64
 import random
-import urllib
-from urllib import *
 from tkinter import *
 import mysql.connector
 import sys
 '''
     build a Connection to xo_db Database..
+    Database : xo_db
+    Table name : results
 '''
 db = mysql.connector.connect(
     host="localhost",
@@ -345,7 +344,7 @@ class NewPlayer:
             assert len(username) > 0 and len(username)
             cursor = db.cursor(buffered=True)
             cursor.execute(
-                f"INSERT INTO results(username, password, p_score, ai_score) VALUES('{username}',{password}, {player_wins},{ai_wins})")
+                f"INSERT INTO results(username, password, p_score, ai_score) VALUES('{username}','{password}', {player_wins},{ai_wins});")
             db.commit()
 
 
@@ -413,14 +412,14 @@ class RegisteredPlayer:
         '''
         def getScores():
             cursor = db.cursor(buffered=True)
-            sql_stmt = f"SELECT p_score, ai_score FROM results WHERE username='{uname_entry.get()}'"
+            sql_stmt = f"SELECT p_score, ai_score FROM results WHERE username='{uname_entry.get()}';"
             cursor.execute(sql_stmt)
             result = cursor.fetchone()
             return result[0], result[1]
 
         def u_nameIsToken(u_name):
             cursor = db.cursor(buffered=True)
-            sql_stmt = f"SELECT p_score FROM results WHERE username='{u_name}'"
+            sql_stmt = f"SELECT p_score FROM results WHERE username='{u_name}';"
             cursor.execute(sql_stmt)
             if cursor.rowcount != 0:
                 return True
